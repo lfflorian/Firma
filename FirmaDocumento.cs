@@ -17,6 +17,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml;
 using Microsoft.Xades;
+using System.Xml.Linq;
 
 namespace Firma
 {
@@ -37,7 +38,6 @@ namespace Firma
             using (parametros.Signer = new Signer(cert))
             {
                 var documento = FirmaXades(parametros, rutaDocumento);
-                documento = MoveSignedNode(documento);
                 AlmacenamientoDocumento(documento, ubicacionDestino, nombredocumento);
                 return documento.Document;
             }
@@ -60,7 +60,9 @@ namespace Firma
             XadesService xadesService = new XadesService();
             using (FileStream fs = new FileStream(ruta, FileMode.Open))
             {
-                return xadesService.Sign(fs, sp);
+                var documento = xadesService.Sign(fs, sp);
+                MoverNodoFirma(documento);
+                return documento;
             }
         }
 
@@ -80,30 +82,18 @@ namespace Firma
                 SignatureMethod = SignatureMethod.RSAwithSHA256,
                 DigestMethod = FirmaXadesNet.Crypto.DigestMethod.SHA256
             };
-
+            
             return parametros;
         }
-
-        private SignatureDocument MoveSignedNode(SignatureDocument sd)
+        
+        private void MoverNodoFirma(SignatureDocument sd)
         {
             var documento = sd.Document;
-            //var nsmgr = new XmlNamespaceManager(documento.NameTable);
-            //nsmgr.AddNamespace("ds", "http://www.w3.org/2000/09/xmldsig#");
-            //var parent = documento.GetElementsByTagName("dte:GTDocumento").Cast<XmlNode>().FirstOrDefault();
+            
+            var NodoFirma = documento.GetElementsByTagName("ds:Signature")[0];
+            NodoFirma.ParentNode.RemoveChild(NodoFirma);
 
-            var NodoFirma = documento.GetElementsByTagName("ds:Signature").Cast<XmlNode>().FirstOrDefault();
-            var NodoSat = documento.GetElementsByTagName("dte:SAT").Cast<XmlNode>().FirstOrDefault();
-            XmlNode previousNode = documento.PreviousSibling;
-
-            documento.RemoveChild(NodoFirma);
-
-            XmlDocument xmlDocReultadnte = new XmlDocument();
-            //Error
-            //xmlDocReultadnte.LoadXml(documento.InsertBefore(NodoFirma, previousNode).ToString());
-            var cassst = documento.InsertAfter(NodoFirma, previousNode);
-            //documento.
-            //sd.Document = cassst;
-            return sd;
+            documento.DocumentElement.AppendChild(NodoFirma);
         }
     }
 }
