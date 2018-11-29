@@ -50,7 +50,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FirmaCodigo.cs" />
     <Compile Include="FirmaDocumento.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

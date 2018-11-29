@@ -5,13 +5,15 @@ using FirmaXadesNet.Signature;
 using FirmaXadesNet.Signature.Parameters;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml;
+using System.Text;
+using FirmaXadesNet.Validation;
 
 namespace Firma
 {
-    public class FirmaDocumento
+    public static class FirmaDocumento
     {
         //Invocación de la firma de documento, retorno  y almacenamiento de este
-        public XmlDocument FirmarDocumento(string rutaCertificado, string contraseñaCertificado, string rutaDocumento, string ubicacionDestino)
+        public static XmlDocument FirmarDocumento(string rutaCertificado, string contraseñaCertificado, string rutaDocumento, string ubicacionDestino)
         {
             X509Certificate2 cert = new X509Certificate2(rutaCertificado, contraseñaCertificado, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
 
@@ -27,7 +29,7 @@ namespace Firma
         }
 
         //Invocación de la firma de documento y retorno de este
-        public XmlDocument FirmarDocumento(string rutaCertificado, string contraseñaCertificado, string rutaDocumento)
+        public static XmlDocument FirmarDocumento(string rutaCertificado, string contraseñaCertificado, string rutaDocumento)
         {
             X509Certificate2 cert = new X509Certificate2(rutaCertificado, contraseñaCertificado, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
 
@@ -39,7 +41,7 @@ namespace Firma
         }
 
         //Firma del documento
-        private SignatureDocument FirmaXades(SignatureParameters sp, string ruta)
+        private static SignatureDocument FirmaXades(SignatureParameters sp, string ruta)
         {
             XadesService xadesService = new XadesService();
             using (FileStream fs = new FileStream(ruta, FileMode.Open))
@@ -51,14 +53,14 @@ namespace Firma
         }
 
         //Almacenamiento e ruta especifica
-        private void AlmacenamientoDocumento(SignatureDocument sd, string ruta, string nombre)
+        private static void AlmacenamientoDocumento(SignatureDocument sd, string ruta, string nombre)
         {
             ruta = $@"{ruta}\{nombre}-Firmado.xml";
             sd.Save(ruta);
         }
         
         //Parametros para la firma del documento
-        public SignatureParameters ParametrosdeFirma()
+        private static SignatureParameters ParametrosdeFirma()
         {
             SignatureParameters parametros = new SignatureParameters
             {
@@ -66,19 +68,73 @@ namespace Firma
                 InputMimeType = "text/xml",
                 ElementIdToSign = "DatosEmision",
                 SignatureMethod = SignatureMethod.RSAwithSHA256,
-                DigestMethod = FirmaXadesNet.Crypto.DigestMethod.SHA256
+                DigestMethod = DigestMethod.SHA256
             };
-            
+
             return parametros;
         }
         
         //Cambio de posicion del nodo de la firma en el nodo padre del documento
-        private void MoverNodoFirma(SignatureDocument sd)
+        private static void MoverNodoFirma(SignatureDocument sd)
         {
             var documento = sd.Document;
             var NodoFirma = documento.GetElementsByTagName("ds:Signature")[0];
             NodoFirma.ParentNode.RemoveChild(NodoFirma);
             documento.DocumentElement.AppendChild(NodoFirma);
+        }
+
+
+
+
+
+
+        //Validación de documento
+        public static bool ValidarDocumento(string DocumentoFirmado, string rutaCertificado,string contraseñaCertificado)
+        {
+            
+            XadesService xadesService = new XadesService();
+            SignatureDocument sd = new SignatureDocument();
+            XmlDocument xml = new XmlDocument();
+            Microsoft.Xades.XadesSignedXml firmaXades;
+            firmaXades = new Microsoft.Xades.XadesSignedXml();
+            xml.LoadXml(DocumentoFirmado);
+
+            /*formación del signed element*/
+            XmlNodeList nodeList = xml.GetElementsByTagName("ds:Signature");
+            var xelm = (XmlElement)nodeList[0];
+            XmlNodeList nodeListDocumento = xml.GetElementsByTagName("dte:DatosEmision");
+            var xelmDocumento = (XmlElement)nodeListDocumento[0];
+            XmlNodeList nodeListReference = xml.GetElementsByTagName("ds:Reference");
+            var xelmReference = (XmlElement)nodeListReference[0];
+
+            X509Certificate2 cert = new X509Certificate2(rutaCertificado, contraseñaCertificado, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+            Signer sign = new Signer(cert);
+
+            //ds:Reference
+            System.Security.Cryptography.Xml.Reference referencia = new System.Security.Cryptography.Xml.Reference();
+            referencia.Uri = "#DatosEmision";
+            referencia.Id = xelmReference.Attributes[0].Value;
+            System.Security.Cryptography.Xml.XmlDsigC14NTransform transform = new System.Security.Cryptography.Xml.XmlDsigC14NTransform();
+            referencia.AddTransform(transform);
+
+            /*Añadiendo los valores*/
+            firmaXades.LoadXml(xelm);
+            firmaXades.ContentElement = xelmDocumento;
+            firmaXades.SigningKey = sign.SigningKey;
+            firmaXades.AddReference(referencia);
+            //firmaXades.ComputeSignature();
+
+            var resultaperacion = firmaXades.CheckXmldsigSignature();
+            
+            sd.Document = xml;
+            sd.XadesSignature = firmaXades;
+
+            var resultado = xadesService.Validate(sd);
+
+            if (resultado.IsValid)
+                return true;
+            else
+                return false;  
         }
     }
 }
