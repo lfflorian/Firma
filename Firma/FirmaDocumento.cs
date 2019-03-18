@@ -110,7 +110,7 @@ namespace Firma
         private static void MoveSignatureNode(SignatureDocument sd)
         {
             var document = sd.Document;
-            var SignatureNode = document.GetElementsByTagName("ds:Signature")[0];
+            var SignatureNode = document.GetElementsByTagName("Signature")[0];
             SignatureNode.ParentNode.RemoveChild(SignatureNode);
             document.DocumentElement.AppendChild(SignatureNode);
         }
