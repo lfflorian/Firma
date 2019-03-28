@@ -15,12 +15,12 @@ namespace Firma
         /// <summary>
         /// Sign the document, return of this and storage in specific path
         /// </summary>
-        /// <param name="certifiedPath"></param> Path were it is stored the certified 
-        /// <param name="certifiedPassword"></param> Password of the certified
-        /// <param name="node"></param> Node to sign of the ocument
-        /// <param name="DocumentPath"></param> Path of the document were is stored
-        /// <param name="pathToStorage"></param> Path were to storage the document xml
-        /// <returns></returns>
+        /// <param name="certifiedPath">Path were it is stored the certified</param> 
+        /// <param name="certifiedPassword">Password of the certified</param>
+        /// <param name="node">Node to sign of the document</param>
+        /// <param name="DocumentPath">Path of the document were is stored</param>
+        /// <param name="pathToStorage">Path were to storage the document xml</param>
+        /// <returns>Return a xmlDocument signed and save in the specific route</returns>
         public static XmlDocument SignDocument(string certifiedPath, string certifiedPassword, string nodo, string rutaDocumento, string pathToStorage)
         {
             X509Certificate2 cert = new X509Certificate2(certifiedPath, certifiedPassword, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
@@ -39,11 +39,11 @@ namespace Firma
         /// <summary>
         /// Sign the document and return of this
         /// </summary>
-        /// <param name="certifiedPath"></param> Path were it is stored the certified 
-        /// <param name="certifiedPassword"></param> Password of the certified
-        /// <param name="node"></param> Node to sign of the ocument
-        /// <param name="DocumentPath"></param> Path of the document were is stored
-        /// <returns></returns>
+        /// <param name="certifiedPath">Path were it is stored the certified</param> 
+        /// <param name="certifiedPassword">Password of the certified</param>
+        /// <param name="node">Node to sign of the document</param>
+        /// <param name="DocumentPath">Path of the document were is stored</param> 
+        /// <returns>Return a xmlDocument signed</returns>
         public static XmlDocument SignDocument(string certifiedPath, string certifiedPassword, string node, string DocumentPath)
         {
             X509Certificate2 cert = new X509Certificate2(certifiedPath, certifiedPassword, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
@@ -58,9 +58,9 @@ namespace Firma
         /// <summary>
         /// Function that make the signature of the document
         /// </summary>
-        /// <param name="sp"></param> Document to sign
-        /// <param name="path"></param> Path were the document is storage
-        /// <returns></returns>
+        /// <param name="sp">Document to sign</param> 
+        /// <param name="path">Path were the document is storage</param> 
+        /// <returns>Return a signed document</returns>
         private static SignatureDocument XadesSigned(SignatureParameters sp, string path)
         {
             XadesService xadesService = new XadesService();
@@ -75,9 +75,9 @@ namespace Firma
         /// <summary>
         /// Set the path for save the signed document
         /// </summary>
-        /// <param name="sd"></param> Document signed to storage
-        /// <param name="path"></param> Path of the document to store
-        /// <param name="name"></param> Name of the document to store
+        /// <param name="sd">Document signed to storage</param> 
+        /// <param name="path">Path of the document to store</param> 
+        /// <param name="name">Name of the document to store</param> 
         private static void PathToStorage(SignatureDocument sd, string path, string name)
         {
             path = $@"{path}\{name}-Signed.xml";
@@ -87,7 +87,7 @@ namespace Firma
         /// <summary>
         /// Required parameters like tipe of document, signature method encryption and node to sign
         /// </summary>
-        /// <param name="node"></param> Node to be signed
+        /// <param name="node">Node to be signed</param> 
         /// <returns></returns>
         private static SignatureParameters SignatureParameters(string node)
         {
@@ -106,7 +106,7 @@ namespace Firma
         /// <summary>
         ///  move the position of the signature node to the end of the document  
         /// </summary>
-        /// <param name="sd"></param> Document with the signature to move
+        /// <param name="sd">Document with the signature to move</param> 
         private static void MoveSignatureNode(SignatureDocument sd)
         {
             var document = sd.Document;
